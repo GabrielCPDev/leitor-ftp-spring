@@ -33,6 +33,13 @@
 			<optional>true</optional>
 		</dependency>
 
+		<!--dependencias da amazon-->
+		<dependency>
+			<groupId>com.amazonaws</groupId>
+			<artifactId>aws-java-sdk-s3</artifactId>
+			<version>1.11.82</version>
+		</dependency>
+		<!--test-->
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-test</artifactId>
