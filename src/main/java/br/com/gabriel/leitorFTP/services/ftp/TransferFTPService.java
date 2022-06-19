@@ -5,10 +5,14 @@ import lombok.extern.log4j.Log4j;
 import org.apache.commons.net.PrintCommandListener;
 import org.apache.commons.net.ftp.FTP;
 import org.apache.commons.net.ftp.FTPClient;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import java.io.*;
+import java.util.ArrayList;
+import java.util.List;
+
 @Log
 @Service
 public class TransferFTPService {
@@ -21,8 +25,11 @@ public class TransferFTPService {
     private String USER;
     @Value("${ftp.password}")
     private String PASSWORD;
+    @Autowired
+    private UploadS3Service uploadS3Service;
 
-    public void execute() throws IOException {
+    public List<FileTransfer> execute() throws IOException {
+        List<FileTransfer> returnList = new ArrayList<>();
         FTPClient ftpClient = new FTPClient();
         try{
 
@@ -45,7 +52,15 @@ public class TransferFTPService {
                 boolean success = ftpClient.retrieveFile(remoteFile, outputStream);
                 outputStream.close();
                 if (success){
-                    log.info("Arquivo recebido com sucesso");
+                    log.info("Arquivo recebido com sucesso, enviando para s3 ...");
+
+                    FileTransfer fileTransfer = uploadS3Service.execute(itemFile, tmpDownload);
+                    fileTransfer.setPathLocal(remoteFile);
+                    returnList.add(fileTransfer);
+                    log.info("Arquivo enviado para s3 ...");
+
+                    ftpClient.deleteFile(itemFile);
+                    log.info("Arquivo deletado na s3 ...");
                 }
 
             }
@@ -59,5 +74,6 @@ public class TransferFTPService {
                 ftpClient.disconnect();
             }
         }
+        return returnList;
     }
 }
